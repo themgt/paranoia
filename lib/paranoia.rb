@@ -17,7 +17,11 @@ module Paranoia
     end
 
     def only_deleted
-      with_deleted.where("#{self.table_name}.#{paranoia_column} IS NOT NULL")
+      if null_value.nil?
+         with_deleted.where("#{self.table_name}.#{paranoia_column} IS NOT NULL")
+       else
+         with_deleted.where("#{self.table_name}.#{paranoia_column} != ?", null_value)
+       end
     end
     alias :deleted :only_deleted
 
@@ -138,9 +142,11 @@ class ActiveRecord::Base
 
     include Paranoia
     class_attribute :paranoia_column
+    class_attribute :null_value
 
     self.paranoia_column = options[:column] || :deleted_at
-    default_scope { where(self.quoted_table_name + ".#{paranoia_column} IS NULL") }
+    self.null_value = options[:null_value] || nil
+    default_scope { where("#{self.table_name}.#{paranoia_column}" => null_value) }
 
     before_restore {
       self.class.notify_observers(:before_restore, self) if self.class.respond_to?(:notify_observers)

@@ -154,6 +154,8 @@ class ActiveRecord::Base
     default_scope do
       if paranoia_sentinel_value.present? && paranoia_allow_null
         where("#{self.table_name}.#{paranoia_column} IS NULL || #{self.table_name}.#{paranoia_column} = ?", paranoia_sentinel_value)
+      elsif paranoia_sentinel_value.present?
+        where("#{self.table_name}.#{paranoia_column} = ?", paranoia_sentinel_value)
       else
         where("#{self.table_name}.#{paranoia_column}" => paranoia_sentinel_value)
       end
